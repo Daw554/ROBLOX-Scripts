@@ -1,60 +1,84 @@
--- Skrypt dla Byt w RolePlay z UI powiadomieniem
--- Wymaga: Xeno Executor
+-- Skrypt dla Byt w RolePlay z pełnym debugowaniem
+-- Wymaga: Xeno Executor (v3.6.0+)
 -- Autor: [Twój Nick]
 
 if not game:IsLoaded() then game.Loaded:Wait() end
 
--- Tworzenie powiadomienia
-local Notification = Instance.new("ScreenGui")
-local Frame = Instance.new("Frame")
-local TextLabel = Instance.new("TextLabel")
-
-Notification.Name = "ScriptNotification"
-Notification.Parent = game.CoreGui
-Notification.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-
-Frame.Parent = Notification
-Frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-Frame.BorderSizePixel = 0
-Frame.Position = UDim2.new(0.5, -150, 0.5, -50)
-Frame.Size = UDim2.new(0, 300, 0, 100)
-Frame.Active = true
-Frame.Draggable = true
-
-TextLabel.Parent = Frame
-TextLabel.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-TextLabel.BackgroundTransparency = 1
-TextLabel.Size = UDim2.new(1, 0, 1, 0)
-TextLabel.Font = Enum.Font.SourceSansBold
-TextLabel.Text = "✅ SKRYPT AKTYWNY\nByt w RolePlay\nCzas promptów: 1s"
-TextLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
-TextLabel.TextSize = 24
-TextLabel.TextWrapped = true
-
--- Automatyczne zniknięcie po 5 sekundach
-spawn(function()
-    wait(5)
-    Frame:Destroy()
-end)
-
--- Główny kod skryptu
 local Players = game:GetService("Players")
-local player = Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
+local RunService = game:GetService("RunService")
 
+-- 1. Funkcja tworząca powiadomienie
+local function showNotification()
+    local Notification = Instance.new("ScreenGui")
+    local Frame = Instance.new("Frame")
+    local TextLabel = Instance.new("TextLabel")
+
+    Notification.Name = "ScriptNotification"
+    Notification.Parent = game.CoreGui
+    Notification.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+    Frame.Parent = Notification
+    Frame.BackgroundColor3 = Color3.fromRGB(30, 30, 46) -- Ciemnoniebieskie tło
+    Frame.BorderSizePixel = 0
+    Frame.Position = UDim2.new(0.5, -150, 0.5, -50)
+    Frame.Size = UDim2.new(0, 300, 0, 100)
+    Frame.Active = true
+    Frame.Draggable = true
+
+    TextLabel.Parent = Frame
+    TextLabel.BackgroundTransparency = 1
+    TextLabel.Size = UDim2.new(1, 0, 1, 0)
+    TextLabel.Font = Enum.Font.GothamBold
+    TextLabel.Text = "✅ SKRYPT AKTYWNY\nByt w RolePlay\nCzas promptów: 1s"
+    TextLabel.TextColor3 = Color3.fromRGB(100, 255, 100) -- Jasnozielony tekst
+    TextLabel.TextSize = 20
+    TextLabel.TextWrapped = true
+
+    -- Animacja znikania
+    delay(5, function()
+        for i = 1, 0, -0.05 do
+            Frame.BackgroundTransparency = i
+            TextLabel.TextTransparency = i
+            wait(0.05)
+        end
+        Notification:Destroy()
+    end)
+end
+
+-- 2. Główna funkcja modyfikująca prompty
 local function modifyPrompts()
+    local player = Players.LocalPlayer
+    local character = player.Character
+    if not character then return end
+
+    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+    if not humanoidRootPart then return end
+
     for _, instance in ipairs(workspace:GetDescendants()) do
         if instance:IsA("ProximityPrompt") then
             pcall(function()
-                instance.HoldDuration = 1
-                instance.ActionText = "[FAST] "..(instance.ActionText or "Interact")
+                -- Sprawdź czy to nie jest zabezpieczony prompt
+                if not instance:FindFirstChild("AntiExploit") then
+                    instance.HoldDuration = 1
+                    instance.ActionText = "⏩ "..(instance.ActionText or "Interact")
+                end
             end)
         end
     end
 end
 
--- System bezpiecznego skanowania
-while true do
-    pcall(modifyPrompts)
-    wait(2)
-end
+-- 3. Inicjalizacja
+showNotification()
+
+-- 4. Główna pętla z zabezpieczeniami
+spawn(function()
+    while true do
+        local success, err = pcall(modifyPrompts)
+        if not success then
+            warn("⚠️ Błąd skryptu: "..tostring(err))
+        end
+        wait(math.random(1, 3)) -- Losowe opóźnienie przeciw wykrywaniu
+    end
+end)
+
+print("🛠️ Debug: Skrypt aktywny | "..os.date("%H:%M:%S"))
