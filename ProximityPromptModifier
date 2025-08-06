@@ -1,4 +1,7 @@
--- Universal Proximity Prompt Modifier
+-- Universal Proximity Prompt Hold Time Changer
+-- Działa w większości gier Roblox
+-- Wymaga: Executor (Synapse/Krnl/Fluxus itp)
+
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 
@@ -6,27 +9,28 @@ local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 
-local RADIUS = 20
-local NEW_HOLD_DURATION = 1
+local RADIUS = 50 -- Zasięg działania
+local NEW_HOLD_DURATION = 1 -- Nowy czas przytrzymania (1s)
 
-local function modifyNearbyPrompts()
-    if not character or not humanoidRootPart then return end
-    
+local function modifyPrompts()
     for _, instance in ipairs(workspace:GetDescendants()) do
         if instance:IsA("ProximityPrompt") then
-            if instance.Parent and instance.Parent:FindFirstChild("Position") then
-                local distance = (humanoidRootPart.Position - instance.Parent.Position).Magnitude
+            local parent = instance.Parent
+            if parent and parent:IsA("BasePart") then
+                local distance = (humanoidRootPart.Position - parent.Position).Magnitude
                 if distance <= RADIUS then
                     instance.HoldDuration = NEW_HOLD_DURATION
-                    instance.ActionText = string.format("Hold (%.1fs)", NEW_HOLD_DURATION)
+                    instance.ActionText = "[FAST] "..(instance.ActionText or "Interact")
                 end
             end
         end
     end
 end
 
-RunService.Heartbeat:Connect(function()
-    pcall(modifyNearbyPrompts)
-end)
+-- Główna pętla
+while true do
+    modifyPrompts()
+    task.wait(1) -- Aktualizuj co 1 sekundę
+end
 
-print("Proximity Prompt Modifier aktywowany!")
+print("✅ Proximity Prompt Modifier aktywny! (Hold: "..NEW_HOLD_DURATION.."s)")
