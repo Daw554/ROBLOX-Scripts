@@ -1,0 +1,32 @@
+-- Universal Proximity Prompt Modifier
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+
+local RADIUS = 20
+local NEW_HOLD_DURATION = 1
+
+local function modifyNearbyPrompts()
+    if not character or not humanoidRootPart then return end
+    
+    for _, instance in ipairs(workspace:GetDescendants()) do
+        if instance:IsA("ProximityPrompt") then
+            if instance.Parent and instance.Parent:FindFirstChild("Position") then
+                local distance = (humanoidRootPart.Position - instance.Parent.Position).Magnitude
+                if distance <= RADIUS then
+                    instance.HoldDuration = NEW_HOLD_DURATION
+                    instance.ActionText = string.format("Hold (%.1fs)", NEW_HOLD_DURATION)
+                end
+            end
+        end
+    end
+end
+
+RunService.Heartbeat:Connect(function()
+    pcall(modifyNearbyPrompts)
+end)
+
+print("Proximity Prompt Modifier aktywowany!")
