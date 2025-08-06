@@ -1,36 +1,60 @@
--- Universal Proximity Prompt Hold Time Changer
--- Działa w większości gier Roblox
--- Wymaga: Executor (Synapse/Krnl/Fluxus itp)
+-- Skrypt dla Byt w RolePlay z UI powiadomieniem
+-- Wymaga: Xeno Executor
+-- Autor: [Twój Nick]
 
+if not game:IsLoaded() then game.Loaded:Wait() end
+
+-- Tworzenie powiadomienia
+local Notification = Instance.new("ScreenGui")
+local Frame = Instance.new("Frame")
+local TextLabel = Instance.new("TextLabel")
+
+Notification.Name = "ScriptNotification"
+Notification.Parent = game.CoreGui
+Notification.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+Frame.Parent = Notification
+Frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Frame.BorderSizePixel = 0
+Frame.Position = UDim2.new(0.5, -150, 0.5, -50)
+Frame.Size = UDim2.new(0, 300, 0, 100)
+Frame.Active = true
+Frame.Draggable = true
+
+TextLabel.Parent = Frame
+TextLabel.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+TextLabel.BackgroundTransparency = 1
+TextLabel.Size = UDim2.new(1, 0, 1, 0)
+TextLabel.Font = Enum.Font.SourceSansBold
+TextLabel.Text = "✅ SKRYPT AKTYWNY\nByt w RolePlay\nCzas promptów: 1s"
+TextLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+TextLabel.TextSize = 24
+TextLabel.TextWrapped = true
+
+-- Automatyczne zniknięcie po 5 sekundach
+spawn(function()
+    wait(5)
+    Frame:Destroy()
+end)
+
+-- Główny kod skryptu
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-
 local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
-local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
-
-local RADIUS = 50 -- Zasięg działania
-local NEW_HOLD_DURATION = 1 -- Nowy czas przytrzymania (1s)
 
 local function modifyPrompts()
     for _, instance in ipairs(workspace:GetDescendants()) do
         if instance:IsA("ProximityPrompt") then
-            local parent = instance.Parent
-            if parent and parent:IsA("BasePart") then
-                local distance = (humanoidRootPart.Position - parent.Position).Magnitude
-                if distance <= RADIUS then
-                    instance.HoldDuration = NEW_HOLD_DURATION
-                    instance.ActionText = "[FAST] "..(instance.ActionText or "Interact")
-                end
-            end
+            pcall(function()
+                instance.HoldDuration = 1
+                instance.ActionText = "[FAST] "..(instance.ActionText or "Interact")
+            end)
         end
     end
 end
 
--- Główna pętla
+-- System bezpiecznego skanowania
 while true do
-    modifyPrompts()
-    task.wait(1) -- Aktualizuj co 1 sekundę
+    pcall(modifyPrompts)
+    wait(2)
 end
-
-print("✅ Proximity Prompt Modifier aktywny! (Hold: "..NEW_HOLD_DURATION.."s)")
